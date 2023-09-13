@@ -12,4 +12,26 @@ services:
       - "./app:/app"
     command:
       sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_NAME=postgresdb
+      - DATABASE_USER=postgresuser 
+      - DATABASE_PASS=postgrespass
+    depends_on:
+      - db
+    
+  db:
+    image: postgres:16rc1-alpine3.18
+    volumes: 
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgresdb
+      - POSTGRES_USER=postgresuser 
+      - POSTGRES_PASSWORD=postgrespass
+
+
+
+volumes:
+  db-data:
+
 
