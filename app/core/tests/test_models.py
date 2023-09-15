@@ -34,3 +34,7 @@ class TestModels(TestCase):
             user = get_user_model().objects.create(email)
 
             self.assertEqual(user.email, normalized)
+
+    def test_creating_user_with_blank_email(self):
+        with self.assertRaises(ValueError):
+            get_user_model().objects.create('')
