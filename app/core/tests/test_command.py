@@ -13,16 +13,15 @@ class TestWaitForDB(SimpleTestCase):
 
         call_command('waitfordb')
 
-        command_check.assert_called_once_with(database=['default'])
+        command_check.assert_called_once_with(databases=['default'])
 
     @patch('time.sleep')
     def test_wait_for_db_delay(self, time_sleep, command_check):
-        command_check.return_value = \
-        [psycopg2OperationalError] * 13 + [OperationalError] * 6 + [True]
+        command_check.side_effect = [psycopg2OperationalError] * 13 + [OperationalError] * 6 + [True]
 
 
         call_command('waitfordb')
 
-        self.assertEqual(command_check.called_count, 20)
+        self.assertEqual(command_check.call_count, 20)
 
-        command_check.assert_called_with(database=['default'])
+        command_check.assert_called_with(databases=['default'])
