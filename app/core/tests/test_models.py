@@ -38,3 +38,14 @@ class TestModels(TestCase):
     def test_creating_user_with_blank_email(self):
         with self.assertRaises(ValueError):
             get_user_model().objects.create('')
+
+    def test_create_superuser(self):
+        email = 'superUser@email.com'
+        password = 'superuserpass'
+
+        user = get_user_model().objects.create_superuser(email,password)
+
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+
+
