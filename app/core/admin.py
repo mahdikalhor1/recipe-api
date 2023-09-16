@@ -14,6 +14,21 @@ class UserModelAdmin(UserAdmin):
 
     readonly_fields=['last_login']
 
+    add_fieldsets=(
+        (None,
+            {'classes':('with',),
+             'fields':('email',
+                       'password1',
+                       'password2',
+                       'name',
+                       'is_staff',
+                       'is_superuser',
+                       'is_active',
+                       ),
+                       }
+        ),
+    )
+
 
 admin.site.register(models.User, UserModelAdmin)
 
