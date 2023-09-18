@@ -28,7 +28,7 @@ class TestPublickUserApi(TestCase):
 
         self.assertTrue(created_user.check_password(payload['password']))
 
-        self.assertNotIn('password', response.date)
+        self.assertNotIn('password', response.data)
 
 
     def test_create_user_with_same_email(self):
@@ -43,7 +43,7 @@ class TestPublickUserApi(TestCase):
 
         response = self.client.post(CREATE_USER_URL, payload)
 
-        self.AssertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     
     def test_create_user_with_short_pass(self):
         """testing that creating user with pass less than 8 characters is not allowed"""
@@ -58,5 +58,5 @@ class TestPublickUserApi(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
-        self.assertFalse(get_user_model().objects.exists(payload['email']))
+        self.assertFalse(get_user_model().objects.filter(email=payload['email']).exists())
 
