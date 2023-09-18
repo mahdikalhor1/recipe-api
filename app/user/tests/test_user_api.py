@@ -7,6 +7,7 @@ from rest_framework import status
 from django.urls import reverse
 
 CREATE_USER_URL = reverse('user:create')
+TOKEN_URL = reverse('user:token')
 
 class TestPublickUserApi(TestCase):
 
@@ -60,3 +61,57 @@ class TestPublickUserApi(TestCase):
         
         self.assertFalse(get_user_model().objects.filter(email=payload['email']).exists())
 
+
+    def test_create_token(self):
+        """testing creation of token for valid user data"""
+        user_params={
+            'email':'exampleuser@gmail.com',
+            'password':'exampleuser',
+            'name':'example',
+        }
+
+        payload = {
+            'email':'exampleuser@gmail.com',
+            'password':'exampleuser',
+        }
+
+        get_user_model().objects.create(**user_params)
+
+        response = self.client.post(TOKEN_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+
+    def test_create_token_invalid_pass(self):
+        """test that creation of token will falies for invalid user password"""
+
+        user_params={
+            'email':'exampleuser@gmail.com',
+            'password':'exampleuser',
+            'name':'example',
+        }
+
+        payload = {
+            'email':'exampleuser@gmail.com',
+            'password':'invalidpass',
+        }
+
+        get_user_model().objects.create(**user_params)
+
+        response = self.client.post(TOKEN_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', response.data)
+    
+    def test_create_token_empty_pass(self):
+        """test to create token when using empty pass"""
+
+        payload = {
+            'email':'exampleuser@gmail.com',
+            'password':'',
+        }
+
+        response = self.client.post(TOKEN_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', response.data)
