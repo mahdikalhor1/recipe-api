@@ -131,15 +131,15 @@ class TestPrivateUserApi(TestCase):
     """testing authenticated users actions"""
 
     def setUp(self):
-        self.user = get_user_model().create(
+        self.user = get_user_model().objects.create(
             email='testuser',
             password='testingpass',
             name='testuser'
         )
 
-        self.client = APIClient
+        self.client = APIClient()
 
-        self.client.force_authentication(user=self.user)
+        self.client.force_authenticate(user=self.user)
 
     
     def test_get_profile(self):
