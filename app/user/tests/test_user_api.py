@@ -8,6 +8,7 @@ from django.urls import reverse
 
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
+MYACCOUNT_URL = reverse('user:myaccount')
 
 class TestPublickUserApi(TestCase):
 
@@ -115,3 +116,62 @@ class TestPublickUserApi(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn('token', response.data)
+
+    
+    def test_get_myaccount_unauthorized(self):
+        """testing that getting profile is not allowed is unauthenticated case"""
+
+        response = self.client.get(MYACCOUNT_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+
+class TestPrivateUserApi(TestCase):
+    """testing authenticated users actions"""
+
+    def setUp(self):
+        self.user = get_user_model().create(
+            email='testuser',
+            password='testingpass',
+            name='testuser'
+        )
+
+        self.client = APIClient
+
+        self.client.force_authentication(user=self.user)
+
+    
+    def test_get_profile(self):
+        """getting users profile"""
+
+        response = self.client.get(MYACCOUNT_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data, {
+            'email':self.user.email,
+            'name':self.user.name,
+        })
+
+    
+    def test_post_myaccount_not_allowed(self):
+        """testing that post method to myaccoutn url failes"""
+
+        response = self.client.post(MYACCOUNT_URL, {})
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        updated_data={
+            'name':'newname',
+            'password':'newpassword',
+        }
+
+        response = self.client.patch(MYACCOUNT_URL, updated_data)
+
+        self.user.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.user.name, updated_data['name'])
+        self.assertTrue(self.user.check_password(updated_data['password']))
