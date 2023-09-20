@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
-
+from django.core.validators import MinValueValidator
+import app.settings as settings
 class UserMananger(BaseUserManager):
 
     def create(self, email, password=None, **extra_fields):
@@ -38,3 +38,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD='email'
 
     objects = UserMananger()
+
+
+class Recipe(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+    title = models.CharField(max_length=50)
+    time_minute = models.IntegerField(validators=[MinValueValidator(0)])
+    price = models.DecimalField(decimal_places=2,max_digits=6,
+                                validators=[MinValueValidator(0)])
+    description = models.TextField(blank=True)
+    link = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.title
+    
