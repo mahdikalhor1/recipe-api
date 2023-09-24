@@ -7,6 +7,7 @@ from core.models import Recipe
 from decimal import Decimal
 from rest_framework import status
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
+from decimal import Decimal
 
 RECIPES_URL=reverse('recipe:recipe-list')
 
@@ -99,3 +100,22 @@ class PrivateRecipeAPITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
     
+    def test_create_recipe(self):
+        """testing create recipe"""
+
+        payload={
+            'title':'test',
+            'price': Decimal('20.32'),
+            'time_minute':50,
+        }
+
+        response=self.client.post(RECIPES_URL, payload)
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        recipe_object=Recipe.objects.get(id=response.data['id'])
+
+        for key, value in payload.items():
+            self.assertEqual(getattr(recipe_object, key), value)
+
+        self.assertEqual(recipe_object.user, self.user)
