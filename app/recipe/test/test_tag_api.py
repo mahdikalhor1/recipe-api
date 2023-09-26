@@ -8,7 +8,8 @@ from core.models import Tag
 
 TAGS_LIST_URL=reverse('recipe:tag-list')
 
-
+def get_tag_detail_url(tag_id):
+    return reverse('recipe:tag-detail', args=[tag_id,])
 class PublicTagApiTest(TestCase):
     """testing tag api while user is not authorized."""
 
@@ -70,3 +71,57 @@ class PrivateTagApiTest(TestCase):
 
         self.assertEqual(response.data, tags_list)
         
+    def test_update_tag(self):
+        """test updating created tag object"""
+
+        tag = Tag.objects.create(user=self.user, name='test')
+        payload={
+            'name':'tag',
+        }
+
+        url = get_tag_detail_url(tag.id)
+        response = self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        tag.refresh_from_db()
+        self.assertEqual(tag.name, payload['name'])
+    
+    def test_update_another_users_tag(self):
+        """testing that updating another users tag will faile."""
+        user2 = get_user_model().objects.create(
+            email='seond@user.com',
+            password='seconduser',
+            )
+        
+        tag = Tag.objects.create(user=user2, name='tag1')
+
+        payload={
+            'name':'new name',
+        }
+        
+        url = get_tag_detail_url(tag.id)
+
+        response = self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_tags_user(self):
+        """testing that updating tags user is not allowed"""
+
+        user2 = get_user_model().objects.create(
+            email='seond@user.com',
+            password='seconduser',
+            )
+        
+        tag = Tag.objects.create(user=self.user, name='tag1')
+
+        payload={
+            'user':user2,
+        }
+        
+        url = get_tag_detail_url(tag.id)
+
+        response = self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
