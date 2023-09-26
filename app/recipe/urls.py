@@ -7,6 +7,8 @@ app_name='recipe'
 router = DefaultRouter()
 
 router.register('recipes', views.RecipeManageView)
+router.register('tags', views.TagView, basename='tag')
+
 
 urlpatterns=[
     path('', include(router.urls)),
