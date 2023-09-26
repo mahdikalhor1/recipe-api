@@ -48,6 +48,7 @@ class Recipe(models.Model):
                                 validators=[MinValueValidator(0)])
     description = models.TextField(blank=True)
     link = models.CharField(max_length=200, null=True)
+    tags=models.ManyToManyField('Tag')
 
     def __str__(self):
         return self.title
