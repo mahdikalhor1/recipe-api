@@ -125,3 +125,36 @@ class PrivateTagApiTest(TestCase):
         response = self.client.patch(url, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_delete_tag(self):
+        """test deleting tag api"""
+
+        tag = Tag.objects.create(user=self.user, name='tag1')
+
+        
+        url = get_tag_detail_url(tag.id)
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(Tag.objects.filter(id=tag.id).exists())
+
+    def test_delete_another_users_tag(self):
+        """test deleting another users tag tag api"""
+
+        user2 = get_user_model().objects.create(
+            email='seond@user.com',
+            password='seconduser',
+            )
+        
+        tag = Tag.objects.create(user=user2, name='tag1')
+
+        
+        url = get_tag_detail_url(tag.id)
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.assertTrue(Tag.objects.filter(id=tag.id).exists())
