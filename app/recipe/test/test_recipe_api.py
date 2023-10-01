@@ -288,4 +288,142 @@ class PrivateRecipeAPITest(TestCase):
                 name=tag['name'],
                 ).exists()
             self.assertTrue(exists)
-    
+
+
+    def test_add_tag_to_recipe(self):
+        """test adding new tag to recipes tag list."""
+        recipe = create_recipe(self.user,
+                               **{'title':'new_recipe',}
+                               )
+
+        tag=Tag.objects.create(user=self.user, name='tag')
+        tag1=Tag.objects.create(user=self.user, name='tag1')
+        tag2=Tag.objects.create(user=self.user, name='tag2')
+
+        payload={
+            'tags':[
+                {
+                    'name':'tag',
+                }
+                ,
+                {
+                    'name':'tag1',
+                },
+                {
+                    'name':'tag2',
+                },
+            ]
+        }
+        
+        url = get_recipe_detail_url(recipe.id)
+        response=self.client.patch(url, payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(recipe.tags.count(), 3)
+
+
+        self.assertIn(tag, recipe.tags.all())
+        self.assertIn(tag1, recipe.tags.all())
+        self.assertIn(tag2, recipe.tags.all())
+
+
+    def test_delete_tag_from_recipe(self):
+        """test deleting tag object from recipe"""
+        recipe = create_recipe(self.user,
+                               **{'title':'new_recipe',}
+                               )
+
+        tag = Tag.objects.create(user=self.user, name='tag')
+        tag1 = Tag.objects.create(user=self.user, name='tag1')
+        tag2 = Tag.objects.create(user=self.user, name='tag2')
+
+        recipe.tags.add(tag)
+        recipe.tags.add(tag1)
+        recipe.tags.add(tag2)
+
+        payload={
+            'tags':[
+                {
+                    'name':'tag1',
+                },
+                {
+                    'name':'tag2',
+                },
+            ]
+        }
+        
+        url = get_recipe_detail_url(recipe.id)
+        response=self.client.patch(url, payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(recipe.tags.count(), 2)
+
+
+        self.assertNotIn(tag, recipe.tags.all())
+        self.assertIn(tag1, recipe.tags.all())
+        self.assertIn(tag2, recipe.tags.all())
+
+
+    def test_clear_recipes_tags(self):
+        """test cleat recipes tags list"""
+        recipe = create_recipe(self.user)
+
+        tag = Tag.objects.create(user=self.user, name='tag')
+        tag1 = Tag.objects.create(user=self.user, name='tag1')
+        tag2 = Tag.objects.create(user=self.user, name='tag2')
+
+        recipe.tags.add(tag)
+        recipe.tags.add(tag1)
+        recipe.tags.add(tag2)
+
+        payload={
+            'tags':[]
+        }
+        
+        url = get_recipe_detail_url(recipe.id)
+        response=self.client.patch(url, payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(recipe.tags.count(), 0)
+
+
+        self.assertNotIn(tag, recipe.tags.all())
+        self.assertNotIn(tag1, recipe.tags.all())
+        self.assertNotIn(tag2, recipe.tags.all())
+
+    def test_create_tag_when_updating(self):
+        """test creating tag objects via recipes update api."""
+        recipe = create_recipe(user=self.user)
+
+
+        payload={
+            'tags':[
+                {
+                    'name':'new tag',
+                },
+                {
+                    'name':'created tag',
+                },
+            ]
+        }
+
+
+        url=get_recipe_detail_url(recipe.id)
+
+        response=self.client.patch(url, payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(recipe.tags.count(), 2)
+
+        for tag in payload['tags']:
+            exists=Tag.objects.filter(
+                user=self.user,
+                name=tag['name']
+            ).exists()
+
+            self.assertTrue(exists)
+
+
+

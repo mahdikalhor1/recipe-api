@@ -28,14 +28,37 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         recipe=Recipe.objects.create(**validated_data)
 
+        self._get_or_create_tags(tags, recipe)
+        
+        return recipe
+    
+    def update(self, instance, validated_data):
+        """updating recipe object"""
+        tags = validated_data.pop('tags', None)
+
+
+        if tags is not None:
+            instance.tags.clear()
+            self._get_or_create_tags(tags, instance)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        
+        return instance
+        
+    def _get_or_create_tags(self, tags, instance):
+        """create and adding tags to the instances tag list"""
+
         user = self.context['request'].user
 
         for tag in tags:
-            tag_object, created=Tag.objects.get_or_create(user=user ,**tag)
-            recipe.tags.add(tag_object)
-        
-        return recipe
-        
+            tag_obj, created=Tag.objects.get_or_create(user=user, **tag)
+            instance.tags.add(tag_obj)
+
+
+
 
 class RecipeDetailSerializer(RecipeSerializer):
 
