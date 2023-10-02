@@ -8,7 +8,7 @@ router = DefaultRouter()
 
 router.register('recipes', views.RecipeManageView)
 router.register('tags', views.TagView, basename='tag')
-
+router.register('ingredients', views.IngredientView, basename='ingredient')
 
 urlpatterns=[
     path('', include(router.urls)),
