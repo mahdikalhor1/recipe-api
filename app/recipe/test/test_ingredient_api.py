@@ -116,3 +116,34 @@ class TestPrivateIngredientApi(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_delete_obj(self):
+        """testing delete ingredient object."""
+        ingredient=Ingredient.objects.create(user=self.user, name='old name')
+
+
+        url=get_ingredients_detail_url(ingredient_id=ingredient.id)
+
+        response=self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        
+        self.assertFalse(
+            Ingredient.objects.filter(user=self.user, name='old name').exists()
+        )
+
+    def test_delete_another_users_obj(self):
+        """test deleting another users ingredient object."""
+        
+        new_user=get_user_model().objects.create(
+            email='newuser@new.new',
+            password='newpassword',
+            )
+        
+        ingredient=Ingredient.objects.create(user=new_user, name='ing')
+
+        url=get_ingredients_detail_url(ingredient.id)
+
+        response=self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

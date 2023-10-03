@@ -43,7 +43,8 @@ class TagView(mixins.DestroyModelMixin,mixins.ListModelMixin, mixins.UpdateModel
         """get queryset for the authenticated user."""
         return Tag.objects.filter(user=self.request.user)
     
-class IngredientView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin):
+class IngredientView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
+                     ,mixins.DestroyModelMixin):
     """manager view for ingredient"""
 
     serializer_class=IngredientSerializer
