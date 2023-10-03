@@ -75,7 +75,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         user=self.context['request'].user
 
         for ingredient in ingredients:
-            ing_obj=Ingredient.objects.get_or_create(user=self.user, **ingredient)
+            ing_obj, created=Ingredient.objects.get_or_create(user=user, **ingredient)
             instance.ingredients.add(ing_obj)
     
 
