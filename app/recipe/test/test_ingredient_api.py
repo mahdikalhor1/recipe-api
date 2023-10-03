@@ -10,6 +10,9 @@ from recipe.serializers import IngredientSerializer
 
 INGREDIENTS_LIST_URL=reverse('recipe:ingredient-list')
 
+def get_ingredients_detail_url(ingredient_id):
+    return reverse('recipe:ingredient-detail', args=[ingredient_id,])
+
 class TestPublicIngredientApi(TestCase):
     """test sending unauthorized request to ingredients api."""
 
@@ -75,6 +78,41 @@ class TestPrivateIngredientApi(TestCase):
         self.assertEqual(serializer.data, response.data)
 
 
+    def test_update_ingredient(self):
+        """testing update ingredient object."""
+        ingredient=Ingredient.objects.create(user=self.user, name='old name')
 
+        payload={
+            'name':'new name',
+        }
 
-    
+        url=get_ingredients_detail_url(ingredient_id=ingredient.id)
+
+        response=self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        ingredient.refresh_from_db()
+
+        self.assertEqual(ingredient.name, payload['name'])
+
+    def test_update_another_users_obj(self):
+        """test updating another users ingredient object."""
+        
+        new_user=get_user_model().objects.create(
+            email='newuser@new.new',
+            password='newpassword',
+            )
+        
+        ingredient=Ingredient.objects.create(user=new_user, name='ing')
+
+        payload={
+            'name':'new name',
+        }
+
+        url=get_ingredients_detail_url(ingredient.id)
+
+        response=self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
