@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from django.urls import reverse
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 from decimal import Decimal
 from rest_framework import status
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
@@ -425,5 +425,66 @@ class PrivateRecipeAPITest(TestCase):
 
             self.assertTrue(exists)
 
+    def test_create_ingredient_on_update_recipe(self):
+        
+        recipe=create_recipe(user=self.user)
+        payload={
+            'ingredients':[
+                {'name':'new ingredient',},
+                {'name':'test',},
+            ]
+        }
 
+        url=get_recipe_detail_url(recipe.id)
+        response=self.client.patch(url, payload)
 
+        self.assertEqual(response.status_code, status.HTTP_200_OK, format='json')
+
+        self.assertEqual(recipe.ingredients.count(), 2)
+        
+        for ingredient in payload['ingredients']:
+            ingredient=Ingredient.objects.filter(
+                user=self.user,
+                name=ingredient['name'],
+                )
+            self.assertIn(ingredient, recipe.ingredients.all())
+
+    def test_add_existing_ingredient_to_recipe(self):
+        """test adding existing ingredient object to recipe"""
+
+        ingredient=Ingredient.objects.create(user=self.user, name='new ing')
+
+        recipe=create_recipe(user=self.user)
+
+        payload={
+            'ingredients':[{
+                'name':'new ing',
+            },],
+        }
+
+        url=get_recipe_detail_url(ingredient.id)
+        response=self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(ingredient, recipe.ingredients.all())
+        self.assertEqual(ingredient.objects.count(), 1)
+
+    def test_clear_ingredient_list(self):
+        """test cleat all ingredient obj of recipe"""
+
+        ingredient=Ingredient.objects.create(user=self.user, name='new ing')
+
+        recipe=create_recipe(user=self.user)
+
+        recipe.ingredients.add(ingredient)
+
+        payload={
+            'ingredients':[],
+        }
+
+        url=get_recipe_detail_url(ingredient.id)
+        response=self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(ingredient, recipe.ingredients.all())
+        self.assertEqual(ingredient.objects.count(), 0)
