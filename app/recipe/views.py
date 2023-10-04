@@ -31,27 +31,29 @@ class RecipeManageView(viewsets.ModelViewSet):
         """set the authenticated user to the created recipe object"""
         serializer.save(user=self.request.user)
 
+class BaseRecipaAttrView(mixins.DestroyModelMixin,
+                         mixins.ListModelMixin,
+                           mixins.UpdateModelMixin,
+                             viewsets.GenericViewSet):
+    """base manager api view for recipe objects attributes."""
+    authentication_classes=[TokenAuthentication]
+    permission_classes=[IsAuthenticated]
 
-class TagView(mixins.DestroyModelMixin,mixins.ListModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+    def get_queryset(self):
+        """returns queryset for the authenticated user."""
+        return self.queryset.filter(user=self.request.user)
+    
+
+class TagView(BaseRecipaAttrView):
     """the manager api view for tag api."""
 
     serializer_class = TagSerializer
-    authentication_classes=[TokenAuthentication]
-    permission_classes=[IsAuthenticated]
-    
-    def get_queryset(self):
-        """get queryset for the authenticated user."""
-        return Tag.objects.filter(user=self.request.user)
-    
-class IngredientView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.UpdateModelMixin
-                     ,mixins.DestroyModelMixin):
+    queryset=Tag.objects.all()
+
+class IngredientView(BaseRecipaAttrView):
     """manager view for ingredient"""
 
     serializer_class=IngredientSerializer
-    authentication_classes=[TokenAuthentication]
-    permission_classes=[IsAuthenticated]
-
-    def get_queryset(self):
-        return Ingredient.objects.filter(user=self.request.user)
+    queryset=Ingredient.objects.all()
     
     
