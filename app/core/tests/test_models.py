@@ -4,7 +4,8 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from decimal import Decimal
-from core.models import Recipe, Tag, Ingredient
+from core.models import Recipe, Tag, Ingredient, get_image_path
+from unittest.mock import patch
 
 class TestModels(TestCase):
 
@@ -101,3 +102,14 @@ class TestModels(TestCase):
         ).exists()
 
         self.assertTrue(exists)
+
+    @patch('core.models.uuid.uuid4')
+    def test_create_unique_image_path(self, mock_uuid):
+        """test creating unique image path from images name."""
+
+        uuid='testing-uuid'
+        mock_uuid.return_value=uuid
+
+        path=get_image_path(None, 'example_path.jpg')
+
+        self.assertEqual(path, f'uploads/recipe/{uuid}.jpg')

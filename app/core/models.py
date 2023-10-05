@@ -2,6 +2,18 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import MinValueValidator
 import app.settings as settings
+import uuid
+import os
+
+def get_image_path(instance, file_path):
+    """returns unique path for recipe objects image."""
+    id=uuid.uuid4()
+
+    suffix=os.path.splitext(file_path)[1]
+    
+
+    return os.path.join('uploads', 'recipe', id+suffix)
+
 class UserMananger(BaseUserManager):
 
     def create(self, email, password=None, **extra_fields):
@@ -50,6 +62,7 @@ class Recipe(models.Model):
     link = models.CharField(max_length=200, null=True)
     tags=models.ManyToManyField('Tag')
     ingredients=models.ManyToManyField('Ingredient')
+    image=models.ImageField(null=True, upload_to=get_image_path)
 
     def __str__(self):
         return self.title
