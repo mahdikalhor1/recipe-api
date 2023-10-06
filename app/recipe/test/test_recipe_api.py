@@ -8,6 +8,12 @@ from decimal import Decimal
 from rest_framework import status
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 from decimal import Decimal
+import os
+
+from django.conf import settings
+from PIL import Image
+import tempfile
+
 
 RECIPES_URL=reverse('recipe:recipe-list')
 
@@ -31,6 +37,10 @@ def create_recipe(user, **params):
 
 def get_recipe_detail_url(recipe_id):
     return reverse('recipe:recipe-detail', args=[recipe_id,])
+
+def get_recipe_image_url(recipe_id):
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
+
 
 class PublicRecipeApiTest(TestCase):
 
@@ -548,3 +558,63 @@ class PrivateRecipeAPITest(TestCase):
         self.assertEqual(recipe.ingredients.count(), 1)      
             
         self.assertIn(ingredient, recipe.ingredients.all())
+
+    
+class ImageApiTest(TestCase):
+    """testing api for recipes image."""
+
+    def setUp(self):
+        self.user=get_user_model().objects.create(
+            email='selfuser@self.dd',
+            password='selfuser',
+        )
+
+        self.client=APIClient()
+        self.client.force_authenticate(user=self.user)
+        self.recipe=create_recipe(user=self.user)
+
+    def dearDown(self):
+        self.recipe.image.delete()
+
+    
+    def test_upload_image(self):
+        """test uploading image to recipe."""
+
+        url=get_recipe_image_url(self.recipe.id)
+
+        # file_path=os.path.join(settings.BASE_DIR, 'recipe/test/testimg/14236.jpg')
+        
+        # file=open(file_path, encoding='utf-8')
+        # image= Image.open(file_path)
+        
+        # image= Image.frombytes(file.read())
+
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as file:
+            image = Image.new('RGB', (28,28))
+            image.save(file, format='JPEG')
+            file.seek(0)
+            payload={'image':file}
+            response=self.client.post(url, payload, format='multipart')
+       
+       
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertIn('image', response.data)
+
+        self.recipe.refresh_from_db()
+
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    def test_upload_bad_data(self):
+        """test uploading invalid data for image file."""
+
+        url=get_recipe_image_url(self.recipe.id)
+        payload={'image':'invalid image file!'}
+
+        response=self.client.post(url, payload, format='multipart')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+
+        

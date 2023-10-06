@@ -12,7 +12,7 @@ def get_image_path(instance, file_path):
     suffix=os.path.splitext(file_path)[1]
     
 
-    return os.path.join('uploads', 'recipe', id+suffix)
+    return os.path.join('uploads', 'recipe', str(id) + suffix)
 
 class UserMananger(BaseUserManager):
 
