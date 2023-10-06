@@ -143,3 +143,7 @@ MEDIA_URL='/static/media/'
 
 STATIC_ROOT='/vol/web/static'
 MEDIA_ROOT='/vol/web/media'
+
+SPECTACULAR_SETTINGS={
+    'COMPONENT_SPLIT_REQUEST':True
+}
