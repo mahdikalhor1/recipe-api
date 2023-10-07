@@ -559,6 +559,57 @@ class PrivateRecipeAPITest(TestCase):
             
         self.assertIn(ingredient, recipe.ingredients.all())
 
+    def test_filtering_by_tags(self):
+        """test filtering recipe objects with specified tags."""
+
+        r1=create_recipe(self.user, title='first recipe')
+        r2=create_recipe(self.user, title='second recipe')
+        r3=create_recipe(self.user, title='third recipe')
+
+        tag1=Tag.objects.create(user=self.user, name='test tag')
+        tag2=Tag.objects.create(user=self.user, name='tag2')
+
+        r1.tags.add(tag2)
+        r3.tags.add(tag1)
+
+        payload={'tags':f'{tag1.id},{tag2.id}'}
+
+        response=self.client.get(RECIPES_URL, payload)
+
+        ser1=RecipeSerializer(r1)
+        ser2=RecipeSerializer(r2)
+        ser3=RecipeSerializer(r3)
+
+        self.assertIn(ser1.data, response.data)
+        self.assertIn(ser3.data, response.data)
+        self.assertNotIn(ser2.data, response.data)
+
+    
+    def test_filtering_by_ingredients(self):
+        """test filtering recipe objects by specifiled ingredients."""
+
+        r1=create_recipe(self.user, title='first recipe')
+        r2=create_recipe(self.user, title='second recipe')
+        r3=create_recipe(self.user, title='third recipe')
+
+        ing1=Ingredient.objects.create(user=self.user, name='test ing')
+        ing2=Ingredient.objects.create(user=self.user, name='ing2')
+
+        r1.ingredients.add(ing2)
+        r3.ingredients.add(ing1)
+
+        payload={'ingredients':f'{ing1.id},{ing2.id}'}
+
+        response=self.client.get(RECIPES_URL, payload)
+
+        ser1=RecipeSerializer(r1)
+        ser2=RecipeSerializer(r2)
+        ser3=RecipeSerializer(r3)
+
+        self.assertIn(ser1.data, response.data)
+        self.assertIn(ser3.data, response.data)
+        self.assertNotIn(ser2.data, response.data)
+
     
 class ImageApiTest(TestCase):
     """testing api for recipes image."""
