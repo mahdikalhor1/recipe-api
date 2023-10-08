@@ -4,7 +4,8 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from recipe.serializers import TagSerializer
-from core.models import Tag
+from core.models import Tag, Recipe
+from decimal import Decimal
 
 TAGS_LIST_URL=reverse('recipe:tag-list')
 
@@ -158,3 +159,59 @@ class PrivateTagApiTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         self.assertTrue(Tag.objects.filter(id=tag.id).exists())
+
+    
+    def test_get_assigned_only_tags(self):
+        """test getting tags those are assigned to a recipe"""
+
+        tag1=Tag.objects.create(user=self.user, name='tag1')
+        tag2=Tag.objects.create(user=self.user, name='tag2')
+
+        recipe=Recipe.objects.create(
+            title='new recipe',
+            time_minute=5,
+            price=Decimal('9.02'),
+            user=self.user,
+        )
+
+        recipe.tags.add(tag1)
+        payload={'assigned_only':True}
+
+        response=self.client.get(TAGS_LIST_URL, payload)
+
+        ser1=TagSerializer(tag1)
+        ser2=TagSerializer(tag2)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(ser1.data, response.data)
+        self.assertNotIn(ser2.data, response.data)
+
+
+    def test_assigned_only_list_is_unique(self):
+        """testing that assigned only ingredients are unique in list."""
+
+        tag1=Tag.objects.create(user=self.user, name='tag1')
+        tag2=Tag.objects.create(user=self.user, name='tag2')
+
+        recipe1=Recipe.objects.create(
+            title='new recipe',
+            time_minute=5,
+            price=Decimal('9.02'),
+            user=self.user,
+        )
+        recipe2=Recipe.objects.create(
+            title='second recipe',
+            time_minute=5,
+            price=Decimal('9.02'),
+            user=self.user,
+        )
+
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag1)
+        payload={'assigned_only':True}
+
+        response=self.client.get(TAGS_LIST_URL, payload)
+
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(1, len(response.data))
