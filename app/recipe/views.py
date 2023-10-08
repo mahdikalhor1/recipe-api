@@ -86,6 +86,18 @@ class RecipeManageView(viewsets.ModelViewSet):
         return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema_view(
+    list=extend_schema(
+
+        parameters=[
+            OpenApiParameter(
+                'assigned_only',
+                OpenApiTypes.BOOL,
+                description='filter to items that are assigned to recipe.',
+            )
+        ]
+    )
+)
 class BaseRecipaAttrView(mixins.DestroyModelMixin,
                          mixins.ListModelMixin,
                            mixins.UpdateModelMixin,
@@ -96,7 +108,14 @@ class BaseRecipaAttrView(mixins.DestroyModelMixin,
 
     def get_queryset(self):
         """returns queryset for the authenticated user."""
-        return self.queryset.filter(user=self.request.user)
+
+        assigned_only=self.request.query_params.get('assigned_only')
+        queryset=self.queryset.filter(user=self.request.user)
+
+        if assigned_only:
+            queryset=queryset.filter(recipe__isnull=False)
+        
+        return queryset.distinct()
     
 
 class TagView(BaseRecipaAttrView):
